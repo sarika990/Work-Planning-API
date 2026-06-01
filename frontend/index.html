@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Planning API</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #218838; }
+        ul { list-style-type: none; padding: 0; }
+        li { background: #f9f9f9; margin: 10px 0; padding: 15px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
+        .completed { text-decoration: line-through; color: gray; }
+        .delete-btn { background: #dc3545; padding: 5px 10px; font-size: 14px; width: auto; }
+        .delete-btn:hover { background: #c82333; }
+        .complete-btn { background: #007bff; padding: 5px 10px; font-size: 14px; width: auto; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Work Planning API</h2>
+    
+    <input type="text" id="taskTitle" placeholder="Task ka naam likhein...">
+    <input type="text" id="taskDesc" placeholder="Description (Optional)...">
+    <input type="date" id="taskDate">
+    <button onclick="addTask()">Add Task</button>
+
+    <ul id="taskList"></ul>
+</div>
+
+<script>
+    const apiUrl = "http://localhost:3000/tasks";
+
+
+    async function fetchTasks() {
+        const response = await fetch(apiUrl);
+        const tasks = await response.json();
+        
+        const taskList = document.getElementById("taskList");
+        taskList.innerHTML = ""; 
+
+        tasks.forEach(task => {
+            const li = document.createElement("li");
+            
+            const titleClass = task.completed ? "completed" : ""; 
+            
+            li.innerHTML = `
+                <div>
+                    <strong class="${titleClass}">${task.title}</strong>
+                    <br>
+                    <small class="${titleClass}">${task.description || ""}</small>
+
+                    
+                    <br>
+                       <small style="color: #d9534f; font-weight: bold;">
+                         📅 Due: ${task.dueDate ? task.dueDate : "No date set"}
+                           </small>
+                </div>
+                <div>
+                    <button class="complete-btn" onclick="toggleComplete('${task._id}', ${task.completed})">
+                        ${task.completed ? "Undo" : "Complete"}
+                    </button>
+                    <button class="delete-btn" onclick="deleteTask('${task._id}')">Delete</button>
+                </div>
+            `;
+            taskList.appendChild(li);
+        });
+    }
+
+    async function addTask() {
+    const titleInput = document.getElementById("taskTitle");
+    const descInput = document.getElementById("taskDesc");
+    const dateInput = document.getElementById("taskDate"); // Naya
+
+    if (!titleInput.value) {
+        alert("Title likhna zaroori hai!");
+        return;
+    }
+
+    const newTask = { 
+        title: titleInput.value, 
+        description: descInput.value,
+        dueDate: dateInput.value // Naya
+    };
+
+    await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTask)
+    });
+
+    titleInput.value = "";
+    descInput.value = "";
+    dateInput.value = ""; // Naya
+    fetchTasks();
+}
+
+    
+    async function toggleComplete(id, currentStatus) {
+        await fetch(`${apiUrl}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ completed: !currentStatus }) 
+        });
+        fetchTasks();
+    }
+
+    
+    async function deleteTask(id) {
+        await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+        fetchTasks();
+    }
+
+    
+    fetchTasks();
+</script>
+
+</body>
+</html>
