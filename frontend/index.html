@@ -3,200 +3,531 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Planning Tracker</title>
+    <title>Productivity & Habit Tracker Calendar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; margin-top: 0; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
-        button { background: #28a745; color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #218838; }
-        ul { list-style: none; padding: 0; }
-        li { background: #fff; border: 1px solid #eee; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        
-        /* Interactive Calendar Design */
-        .calendar-container { max-width: 600px; margin: 30px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; margin-top: 15px; }
-        .calendar-header-cell { font-weight: bold; color: #555; background: #e9ecef; padding: 8px 5px; border-radius: 4px; font-size: 0.9rem; }
-        .calendar-cell { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 10px 2px; border-radius: 6px; min-height: 55px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .calendar-cell:hover { background: #edf2f7; }
-        .calendar-cell.blank { background: transparent; border: none; }
-        .day-number { font-weight: bold; color: #2d3748; font-size: 1rem; }
-        .status-icon { font-size: 1.2rem; margin-top: 4px; }
+        :root {
+            --bg-color: #000000;
+            --card-bg: #0c0c0c;
+            --input-bg: #080808;
+            --border-color: #1a1a1a;
+            --accent: #8a2be2;
+            --accent-glow: rgba(138, 43, 226, 0.45);
+            --accent-hover: #9d3ff2;
+            --white: #ffffff;
+            --muted: #888888;
+            --green: #10b981;
+            --yellow: #fbbf24;
+            --red: #f87171;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--white);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            padding: 3rem 1.5rem;
+        }
+
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
+
+        /* ── Header ── */
+        .dashboard-header { text-align: center; margin-bottom: 3.5rem; }
+        .dashboard-header h1 {
+            font-size: 2.5rem; font-weight: 900; letter-spacing: -0.04em;
+            text-transform: uppercase; margin-bottom: 0.5rem;
+        }
+        .dashboard-header h1 span {
+            color: var(--accent); text-shadow: 0 0 15px var(--accent-glow);
+        }
+        .dashboard-header p {
+            color: var(--muted); font-size: 1.1rem; max-width: 600px;
+            margin: 0 auto; line-height: 1.5;
+        }
+
+        /* ── Grid ── */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 2.5rem; }
+        @media (min-width: 992px) {
+            .dashboard-grid { grid-template-columns: 420px 1fr; }
+        }
+
+        /* ── Card ── */
+        .card {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 2rem;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+        }
+        .card h3 {
+            margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 800;
+            letter-spacing: -0.02em; border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem; text-transform: uppercase; color: var(--white);
+        }
+        .card-header-flex {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem; margin-bottom: 1.5rem;
+        }
+        .card-header-flex h3 { border: none; padding: 0; margin: 0; }
+        .task-count-badge {
+            font-size: 0.8rem; font-weight: 700;
+            background-color: var(--input-bg); color: var(--accent);
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.6rem; border-radius: 4px;
+        }
+
+        /* ── Form ── */
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 700;
+            color: var(--muted); margin-bottom: 0.5rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        input[type="text"], input[type="date"] {
+            width: 100%; padding: 0.85rem 1.1rem;
+            background-color: var(--input-bg); border: 1px solid var(--border-color);
+            border-radius: 6px; color: var(--white);
+            font-family: inherit; font-size: 0.95rem; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]::placeholder { color: #444; }
+        input[type="text"]:focus, input[type="date"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(138,43,226,0.2);
+        }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            width: 100%; padding: 0.9rem 1.25rem;
+            background-color: var(--accent); border: none; border-radius: 6px;
+            color: var(--white); font-weight: 800; font-size: 0.95rem;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;
+            box-shadow: 0 4px 14px rgba(138,43,226,0.3);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            box-shadow: 0 0 20px rgba(138,43,226,0.5);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active { transform: translateY(1px); }
+
+        .btn-delete {
+            background-color: transparent; border: 1px solid #ff4d4d;
+            border-radius: 4px; color: #ff4d4d;
+            padding: 0.4rem 0.8rem; font-size: 0.75rem; font-weight: 700;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-delete:hover {
+            background-color: #ff4d4d; color: #fff;
+            box-shadow: 0 0 10px rgba(255,77,77,0.4);
+        }
+
+        /* ── Task List ── */
+        ul#taskList { list-style: none; max-height: 480px; overflow-y: auto; }
+        ul#taskList::-webkit-scrollbar { width: 6px; }
+        ul#taskList::-webkit-scrollbar-track { background: transparent; }
+        ul#taskList::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        .task-item {
+            background-color: var(--input-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 1.15rem; margin-bottom: 0.85rem;
+            display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .task-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(138,43,226,0.1);
+        }
+        .task-info { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+        .task-title { font-weight: 700; font-size: 1.05rem; color: var(--white); }
+        .task-title.status-complete { text-decoration: line-through; color: var(--muted); }
+        .task-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+        .task-date { font-size: 0.75rem; color: var(--accent); font-weight: 700; }
+        .task-date.status-complete { color: var(--muted); text-decoration: line-through; }
+
+        /* ── Status Dropdown ── */
+        .task-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+        .status-select {
+            appearance: none; -webkit-appearance: none;
+            background-color: var(--input-bg); color: var(--white);
+            border: 1px solid var(--border-color); border-radius: 4px;
+            padding: 0.4rem 1.8rem 0.4rem 0.6rem; font-family: inherit;
+            font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.03em; cursor: pointer; outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .status-select:hover, .status-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(138,43,226,0.25);
+        }
+        .status-select.sel-complete { border-color: var(--green); color: var(--green); }
+        .status-select.sel-pending  { border-color: var(--yellow); color: var(--yellow); }
+        .status-select.sel-notcomplete { border-color: var(--red); color: var(--red); }
+
+        .status-select option {
+            background-color: #111; color: var(--white);
+        }
+
+        /* ── Calendar ── */
+        .calendar-card { display: flex; flex-direction: column; min-height: 520px; }
+        .calendar-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem; border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        .calendar-nav h3 {
+            margin: 0; font-size: 1.5rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: -0.02em;
+        }
+        .btn-nav {
+            background-color: var(--input-bg); border: 1px solid var(--border-color);
+            color: var(--white); width: 2.5rem; height: 2.5rem; border-radius: 50%;
+            font-size: 1.1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-nav:hover {
+            border-color: var(--accent); color: var(--accent);
+            box-shadow: 0 0 8px rgba(138,43,226,0.4);
+        }
+
+        .calendar-legend {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem;
+            margin-bottom: 2rem; background-color: var(--input-bg);
+            padding: 0.75rem 1.25rem; border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .legend-item {
+            font-size: 0.8rem; color: var(--white);
+            display: flex; align-items: center; gap: 0.45rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .legend-icon { font-size: 1.1rem; }
+
+        .calendar-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 8px; flex-grow: 1;
+        }
+        .calendar-header-cell {
+            text-align: center; font-weight: 900; font-size: 0.75rem;
+            color: var(--muted); padding-bottom: 0.75rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .calendar-cell {
+            background-color: var(--input-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 0.75rem; min-height: 85px;
+            display: flex; flex-direction: column;
+            justify-content: space-between; align-items: center;
+            transition: all 0.2s;
+        }
+        .calendar-cell:hover:not(.blank) {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(138,43,226,0.35);
+            transform: translateY(-2px);
+        }
+        .calendar-cell.blank { background: transparent; border: none; pointer-events: none; }
+        .day-number { font-weight: 800; color: var(--white); font-size: 1.05rem; }
+        .status-indicator {
+            font-size: 1.35rem; display: block; margin-top: 0.5rem;
+            animation: popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        @keyframes popIn {
+            0%   { transform: scale(0.4); opacity: 0; }
+            100% { transform: scale(1);   opacity: 1; }
+        }
+        .calendar-cell.today {
+            border-color: var(--accent); background-color: #0e0616;
+            box-shadow: inset 0 0 8px rgba(138,43,226,0.15);
+        }
+        .calendar-cell.today .day-number { color: #b87bf8; position: relative; }
+        .calendar-cell.today .day-number::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%;
+            transform: translateX(-50%); width: 4px; height: 4px;
+            border-radius: 50%; background-color: var(--accent);
+        }
     </style>
 </head>
 <body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>📊 Productivity & Habit <span>Tracker</span></h1>
+            <p>Track your daily routines, plan task deadlines, and monitor your monthly habit performance visually with real-time status syncing.</p>
+        </header>
 
-    <div class="container">
-        <h2>📝 Work Planning Dashboard</h2>
-        <input type="text" id="taskTitle" placeholder="Task ka naam likhein...">
-        <input type="text" id="taskDesc" placeholder="Task ki details/description...">
-        <input type="date" id="taskDate">
-        <button onclick="addTask()">Add New Task</button>
+        <div class="dashboard-grid">
 
-        <ul id="taskList"></ul>
-    </div>
-
-    <div class="calendar-container">
-        <h3 style="text-align: center; margin: 0; color: #2d3748;" id="calendar-month-year">Calendar Tracker</h3>
-        <div class="calendar-grid" id="calendarGrid"></div>
-    </div>
-
-    <script>
-        const apiUrl = "https://work-planning-api.onrender.com/tasks";
-
-       
-        async function fetchTasks() {
-            try {
-                const res = await fetch(apiUrl);
-                if (!res.ok) throw new Error("Network response main dikkat hai");
-                const tasks = await res.json();
-                
-                const taskList = document.getElementById("taskList");
-                taskList.innerHTML = "";
-                
-                tasks.forEach(task => {
-                    const li = document.createElement("li");
-                    const isChecked = task.completed ? "checked" : "";
-                    const textStyle = task.completed ? "text-decoration: line-through; color: #a0aec0;" : "";
-
-                    // Safe integration using 'this.checked' to avoid console crashes
-                    li.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px;">
-                            <div style="flex: 1;">
-                                <input type="checkbox" ${isChecked} onchange="toggleTask('${task._id}', this.checked)" style="cursor: pointer; transform: scale(1.3); margin-right: 12px; vertical-align: middle;">
-                                <span style="${textStyle} font-weight: bold; font-size: 1.1rem; vertical-align: middle;">${task.title}</span>
-                                <p style="margin: 6px 0 0 32px; color: #4a5568; font-size: 0.95rem;">${task.description || "No description"}</p>
-                                <small style="margin-left: 32px; color: #e53e3e; font-weight: bold; display: block; margin-top: 6px;">
-                                    📅 Due Date: ${task.dueDate ? task.dueDate : "No date set"}
-                                </small>
-                            </div>
-                            <button onclick="deleteTask('${task._id}')" style="background: #e53e3e; color: white; border: none; padding: 6px 12px; border-radius: 4px; width: auto; margin: 0; font-size: 0.9rem;">Delete</button>
-                        </div>
-                    `;
-                    taskList.appendChild(li);
-                });
-
-                renderCalendar(tasks);
-            } catch (error) {
-                console.error("Tasks load karne mein error aaya:", error);
-            }
-        }
-
-       
-        async function addTask() {
-            const titleInput = document.getElementById("taskTitle");
-            const descInput = document.getElementById("taskDesc");
-            const dateInput = document.getElementById("taskDate");
-
-            if (!titleInput.value) {
-                alert("Task ka Title likhna zaroori hai!");
-                return;
-            }
-
-            const newTask = {
-                title: titleInput.value,
-                description: descInput.value,
-                dueDate: dateInput.value
-            };
-
-            try {
-                await fetch(apiUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newTask)
-                });
-
-                titleInput.value = "";
-                descInput.value = "";
-                dateInput.value = "";
-                fetchTasks();
-            } catch (error) {
-                console.error("Add task failed:", error);
-            }
-        }
-
-      
-        async function toggleTask(id, isChecked) {
-            try {
-                await fetch(`${apiUrl}/${id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ completed: isChecked })
-                });
-                fetchTasks(); 
-            } catch (error) {
-                console.error("Toggle task failed:", error);
-            }
-        }
-
-        
-        async function deleteTask(id) {
-            try {
-                await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
-                fetchTasks();
-            } catch (error) {
-                console.error("Delete task failed:", error);
-            }
-        }
-
-       
-        function renderCalendar(tasks) {
-            const calendarGrid = document.getElementById("calendarGrid");
-            calendarGrid.innerHTML = "";
-            
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.getElementById("calendar-month-year").innerText = `📅 ${monthNames[month]} ${year}`;
-
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const totalDays = new Date(year, month + 1, 0).getDate();
-            
-            const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            daysOfWeek.forEach(day => {
-                calendarGrid.innerHTML += `<div class="calendar-header-cell">${day}</div>`;
-            });
-
-            for (let i = 0; i < firstDayIndex; i++) {
-                calendarGrid.innerHTML += `<div class="calendar-cell blank"></div>`;
-            }
-
-            for (let day = 1; day <= totalDays; day++) {
-                const monthStr = String(month + 1).padStart(2, '0');
-                const dayStr = String(day).padStart(2, '0');
-                const dateStr = `${year}-${monthStr}-${dayStr}`;
-
-                
-                const dayTasks = tasks.filter(t => t.dueDate && t.dueDate.startsWith(dateStr));
-                let statusIcon = "";
-                
-                if (dayTasks.length > 0) {
-                    const allCompleted = dayTasks.every(t => t.completed === true);
-                    if (allCompleted) {
-                        statusIcon = "✅"; 
-                    } else {
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        if (dateStr < todayStr) {
-                            statusIcon = "❌"; 
-                        } else {
-                            statusIcon = "🟡"; 
-                        }
-                    }
-                }
-
-                calendarGrid.innerHTML += `
-                    <div class="calendar-cell">
-                        <span class="day-number">${day}</span>
-                        <span class="status-icon">${statusIcon}</span>
+            <!-- ════ Left Panel ════ -->
+            <div class="panel-left">
+                <div class="card">
+                    <h3>Create New Task</h3>
+                    <div class="form-group">
+                        <label for="taskTitle">Task Title *</label>
+                        <input type="text" id="taskTitle" placeholder="e.g. Read 15 pages, Morning Run…">
                     </div>
-                `;
-            }
+                    <div class="form-group">
+                        <label for="taskDesc">Description</label>
+                        <input type="text" id="taskDesc" placeholder="e.g. Completed during morning hours…">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDate">Due Date</label>
+                        <input type="date" id="taskDate">
+                    </div>
+                    <button onclick="addTask()" class="btn-primary">Add New Task</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-flex">
+                        <h3>Active List</h3>
+                        <span class="task-count-badge" id="taskCount">0 tasks</span>
+                    </div>
+                    <ul id="taskList"></ul>
+                </div>
+            </div>
+
+            <!-- ════ Right Panel ════ -->
+            <div class="panel-right">
+                <div class="card calendar-card">
+                    <div class="calendar-nav">
+                        <button class="btn-nav" onclick="changeMonth(-1)">←</button>
+                        <h3 id="calendarTitle">Month Year</h3>
+                        <button class="btn-nav" onclick="changeMonth(1)">→</button>
+                    </div>
+                    <div class="calendar-legend">
+                        <div class="legend-item"><span class="legend-icon">✅</span><span>Complete</span></div>
+                        <div class="legend-item"><span class="legend-icon">🟡</span><span>Pending</span></div>
+                        <div class="legend-item"><span class="legend-icon">❌</span><span>Not Complete</span></div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+const apiUrl = "https://work-planning-api.onrender.com/tasks";
+
+let allTasks   = [];
+let viewYear   = new Date().getFullYear();
+let viewMonth  = new Date().getMonth();        
+function escapeHTML(s) {
+    if (!s) return "";
+    return s.replace(/[&<>'"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[c]));
+}
+
+function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function setDefaultDate() {
+    document.getElementById("taskDate").value = todayStr();
+}
+
+async function fetchTasks() {
+    try {
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error("Status " + res.status);
+        allTasks = await res.json();
+        renderTaskList();
+        renderCalendar(allTasks);
+    } catch (err) {
+        console.error("fetchTasks error:", err);
+        document.getElementById("taskList").innerHTML =
+            '<div style="text-align:center;padding:2rem;color:#f87171;border:1px dashed #3a1a1a;border-radius:8px">' +
+            '<span style="font-size:2rem;display:block;margin-bottom:.5rem">⚠️</span>' +
+            'Could not reach the backend.<br>' +
+            '<small style="color:#888;display:block;margin-top:.5rem">Render cold-start can take ~60 s. Refresh shortly.</small></div>';
+    }
+}
+
+function renderTaskList() {
+    const ul    = document.getElementById("taskList");
+    const badge = document.getElementById("taskCount");
+    ul.innerHTML = "";
+
+    // Sort: pending first, then notcomplete, then complete; within group by date
+    const order = { pending: 0, notcomplete: 1, complete: 2 };
+    const sorted = [...allTasks].sort((a, b) => {
+        const oa = order[a.status] ?? 0, ob = order[b.status] ?? 0;
+        if (oa !== ob) return oa - ob;
+        const da = a.dueDate ? a.dueDate.split('T')[0] : "";
+        const db = b.dueDate ? b.dueDate.split('T')[0] : "";
+        return da.localeCompare(db);
+    });
+
+    badge.textContent = sorted.length + " task" + (sorted.length === 1 ? "" : "s");
+
+    if (sorted.length === 0) {
+        ul.innerHTML =
+            '<div style="text-align:center;padding:2.5rem 1rem;color:#888">' +
+            '<span style="font-size:2.25rem;display:block;margin-bottom:.5rem">🎉</span>' +
+            'No tasks yet — create one above!</div>';
+        return;
+    }
+
+    sorted.forEach(task => {
+        const s = task.status || "pending";
+        const isComplete = s === "complete";
+        const displayDate = (task.dueDate && task.dueDate.trim()) ? task.dueDate.split('T')[0] : "No Date";
+
+        const li = document.createElement("li");
+        li.className = "task-item";
+        li.innerHTML =
+            '<div class="task-info">' +
+                '<span class="task-title' + (isComplete ? ' status-complete' : '') + '">' + escapeHTML(task.title) + '</span>' +
+                (task.description ? '<span class="task-desc">' + escapeHTML(task.description) + '</span>' : '') +
+                '<span class="task-date' + (isComplete ? ' status-complete' : '') + '">📅 ' + displayDate + '</span>' +
+            '</div>' +
+            '<div class="task-actions">' +
+                '<select class="status-select sel-' + s + '" onchange="updateStatus(\'' + task._id + '\', this.value)">' +
+                    '<option value="pending"'      + (s === 'pending'     ? ' selected' : '') + '>🟡 Pending</option>' +
+                    '<option value="complete"'     + (s === 'complete'    ? ' selected' : '') + '>✅ Complete</option>' +
+                    '<option value="notcomplete"'  + (s === 'notcomplete' ? ' selected' : '') + '>❌ Not Done</option>' +
+                '</select>' +
+                '<button class="btn-delete" onclick="deleteTask(\'' + task._id + '\')">Delete</button>' +
+            '</div>';
+        ul.appendChild(li);
+    });
+}
+
+async function addTask() {
+    const titleEl = document.getElementById("taskTitle");
+    const descEl  = document.getElementById("taskDesc");
+    const dateEl  = document.getElementById("taskDate");
+
+    if (!titleEl.value.trim()) { alert("Please enter a task title!"); return; }
+
+    const body = {
+        title:       titleEl.value.trim(),
+        description: descEl.value.trim(),
+        dueDate:     dateEl.value,          // "YYYY-MM-DD" from the picker
+        status:      "pending"
+    };
+
+    try {
+        const res = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || res.status); }
+
+        titleEl.value = "";
+        descEl.value  = "";
+        setDefaultDate();
+        await fetchTasks();
+    } catch (err) {
+        console.error("addTask error:", err);
+        alert("Failed to add task: " + err.message);
+    }
+}
+
+
+async function updateStatus(id, newStatus) {
+    try {
+        const res = await fetch(apiUrl + "/" + id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (!res.ok) throw new Error("Status " + res.status);
+        await fetchTasks();          // re-render list + calendar instantly
+    } catch (err) {
+        console.error("updateStatus error:", err);
+        alert("Failed to update: " + err.message);
+    }
+}
+
+// ─────────────────────────────────────────────────────
+//  5. DELETE TASK  (DELETE)
+// ─────────────────────────────────────────────────────
+async function deleteTask(id) {
+    if (!confirm("Permanently delete this task?")) return;
+    try {
+        const res = await fetch(apiUrl + "/" + id, { method: "DELETE" });
+        if (!res.ok) throw new Error("Status " + res.status);
+        await fetchTasks();
+    } catch (err) {
+        console.error("deleteTask error:", err);
+        alert("Failed to delete: " + err.message);
+    }
+}
+
+// ─────────────────────────────────────────────────────
+//  6. CALENDAR NAVIGATION
+// ─────────────────────────────────────────────────────
+function changeMonth(delta) {
+    viewMonth += delta;
+    if (viewMonth > 11) { viewMonth = 0;  viewYear++; }
+    if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+    renderCalendar(allTasks);
+}
+
+// ─────────────────────────────────────────────────────
+//  7. RENDER CALENDAR
+// ─────────────────────────────────────────────────────
+function renderCalendar(tasks) {
+    const grid = document.getElementById("calendarGrid");
+    grid.innerHTML = "";
+
+    const MONTHS = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+    document.getElementById("calendarTitle").textContent = "📅 " + MONTHS[viewMonth] + " " + viewYear;
+
+    const firstDay  = new Date(viewYear, viewMonth, 1).getDay();   // 0=Sun
+    const totalDays = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const today     = todayStr();
+
+    // Weekday headers
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => {
+        grid.innerHTML += '<div class="calendar-header-cell">' + d + '</div>';
+    });
+
+    // Blank offset cells
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += '<div class="calendar-cell blank"></div>';
+    }
+
+    // Day cells
+    for (let day = 1; day <= totalDays; day++) {
+        const dateStr = viewYear + "-" + String(viewMonth+1).padStart(2,'0') + "-" + String(day).padStart(2,'0');
+
+        // Match tasks whose dueDate starts with this YYYY-MM-DD
+        const dayTasks = tasks.filter(t => t.dueDate && t.dueDate.split('T')[0] === dateStr);
+
+        let icon = "";
+        if (dayTasks.length > 0) {
+            const hasNotComplete = dayTasks.some(t => t.status === 'notcomplete');
+            const hasPending     = dayTasks.some(t => t.status === 'pending');
+            const allComplete    = dayTasks.every(t => t.status === 'complete');
+
+            if (hasNotComplete)     icon = '<span class="status-indicator">❌</span>';
+            else if (hasPending)    icon = '<span class="status-indicator">🟡</span>';
+            else if (allComplete)   icon = '<span class="status-indicator">✅</span>';
         }
 
-        fetchTasks();
-    </script>
+        const cls = (dateStr === today) ? "calendar-cell today" : "calendar-cell";
+        grid.innerHTML += '<div class="' + cls + '">' +
+            '<span class="day-number">' + day + '</span>' + icon + '</div>';
+    }
+}
+
+// ─────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+    setDefaultDate();
+    fetchTasks();
+});
+</script>
 </body>
 </html>

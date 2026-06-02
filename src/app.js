@@ -1,77 +1,89 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const Task = require("./models/taskmodel"); 
+
+// Case-Sensitivity safe loading (works on both Windows and Render Linux)
+let Task;
+try {
+    Task = require("./models/taskmodel");
+} catch (err) {
+    try {
+        Task = require("./models/taskModel");
+    } catch (err2) {
+        console.error("Could not load Task model with either case variant:", err2);
+    }
+}
 
 app.use(cors());
 app.use(express.json());
 
-
-app.post("/tasks", async (req, res) => {
-    try {
-        const newTask = new Task({
-            title: req.body.title,
-            description: req.body.description
-        });
-        
-        
-        const savedTask = await newTask.save(); 
-        res.status(201).json({ message: "Task MongoDB mein save ho gaya!", task: savedTask });
-    } catch (error) {
-        res.status(500).json({ error: "Task save karne mein problem aayi" });
-    }
-});
-
-
+// 1. GET - Fetch all tasks
 app.get("/tasks", async (req, res) => {
     try {
-        const { status } = req.query;
-        let query = {}; 
-
-        if (status === "completed") {
-            query = { completed: true };
-        } else if (status === "pending") {
-            query = { completed: false };
-        }
-
-        
-        const tasks = await Task.find(query);
+        const tasks = await Task.find();
         res.json(tasks);
     } catch (error) {
-        res.status(500).json({ error: "Tasks fetch karne mein problem aayi" });
+        res.status(500).json({ error: error.message });
     }
 });
 
+// 2. POST - Create a new task with title, description, dueDate, and status
+app.post("/tasks", async (req, res) => {
+    try {
+        const { title, description, dueDate, status } = req.body;
 
+        if (!title) {
+            return res.status(400).json({ error: "Title is required!" });
+        }
+
+        const newTask = new Task({
+            title,
+            description,
+            dueDate: dueDate || "",
+            status: status || "pending"
+        });
+
+        const savedTask = await newTask.save();
+        res.status(201).json(savedTask);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 3. PUT - Update the 3-state status of a task
 app.put("/tasks/:id", async (req, res) => {
     try {
-        
+        const { status } = req.body;
+
+        // Validate against the allowed enum values
+        const validStatuses = ["complete", "pending", "notcomplete"];
+        const safeStatus = validStatuses.includes(status) ? status : "pending";
+
         const updatedTask = await Task.findByIdAndUpdate(
-            req.params.id, 
-            req.body, 
+            req.params.id,
+            { status: safeStatus },
             { new: true }
         );
 
         if (!updatedTask) {
-            return res.status(404).json({ message: "Task nahi mila" });
+            return res.status(404).json({ error: "Task not found!" });
         }
-        res.json({ message: "Task MongoDB mein update ho gaya!", task: updatedTask });
+        res.json(updatedTask);
     } catch (error) {
-        res.status(500).json({ error: "Update karne mein problem aayi " });
+        res.status(500).json({ error: error.message });
     }
 });
 
-
+// 4. DELETE - Remove a task
 app.delete("/tasks/:id", async (req, res) => {
     try {
         const deletedTask = await Task.findByIdAndDelete(req.params.id);
-        
         if (!deletedTask) {
-            return res.status(404).json({ message: "Task nahi mila" });
+            return res.status(404).json({ error: "Task not found!" });
         }
-        res.json({ message: "Task hamesha ke liye Delete ho gaya!" });
+        res.json({ message: "Task successfully deleted" });
     } catch (error) {
-        res.status(500).json({ error: "Delete karne mein problem aayi" });
+        res.status(500).json({ error: error.message });
     }
 });
 
